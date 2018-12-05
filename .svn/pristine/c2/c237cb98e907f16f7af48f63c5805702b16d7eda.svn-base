@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" 
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+	<!-- 描述 -->
+	<description>Assets SpringMVC Configuration</description>
+	<!-- 启动注解驱动 -->
+	<mvc:annotation-driven />
+	<!-- 使用Annotation自动注册Bean，解决事物失效问题：在主容器中不扫描@Controller注解，在SpringMvc中只扫描@Controller注解。  -->
+	<context:component-scan base-package="com.xincheng.web.controller">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Service"/>
+	</context:component-scan>
+	<!-- 对静态资源文件的访问， 将无法mapping到Controller的path交给default servlet handler处理 -->
+	<mvc:default-servlet-handler />
+	<!-- 静态资源映射 -->
+    <mvc:resources mapping="/static/**" location="/static/" cache-period="31536000"/>
+    <mvc:resources mapping="/uploadfile/**" location="/uploadfile/" cache-period="31536000"/>
+	<!-- 定义无Controller的path<->view直接映射，相当于全局错误页面跳转 -->
+	<mvc:view-controller path="/" view-name="redirect:login/tologin"/>
+	<!-- 模型视图名称解析，并添加前后缀 -->
+	<bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+		<property name="order" value="1" />
+<!-- 		<property name="favorParameter" value="false" /> -->
+<!-- 		<property name="ignoreAcceptHeader" value="true" /> -->
+<!-- 		<property name="defaultContentType" value="text/html" /> -->
+<!-- 		<property name="mediaTypes"> -->
+<!-- 			<map> -->
+<!-- 				<entry key="json" value="application/json" /> -->
+<!-- 				<entry key="xml" value="application/xml" /> -->
+<!-- 			</map> -->
+<!-- 		</property> -->
+		<!-- 解析视图加前后缀 -->
+		<property name="viewResolvers">
+			<list>
+				<bean class="org.springframework.web.servlet.view.BeanNameViewResolver" />
+				<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+					<property name="prefix" value="/WEB-INF/view/"/>
+					<property name="suffix" value=".jsp"/>
+				</bean>
+			</list>
+		</property>
+	</bean>
+	<!-- 配置MultipartResolver 用于文件上传 使用spring的CommosMultipartResolver -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<!-- maxUploadSize:文件上传的最大值以byte为单位 -->
+		<property name="maxUploadSize" value="102400000"/>
+		<!-- 是请求的编码格式，默认为iso-8859-1 -->
+		<property name="defaultEncoding" value="UTF-8"/> 
+		<!-- uploadTempDir="fileUpload/temp" 为上传文件的临时路径 -->
+	</bean>
+	<!-- 拦截器配置 -->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<!-- 拦截所有地址 /**--> 
+			<mvc:mapping path="/**" />
+			<!-- 不拦截地址 -->
+			<mvc:exclude-mapping path="/static/**"/>
+			<mvc:exclude-mapping path="/uploadfile/**"/>
+			<mvc:exclude-mapping path="/login/validate"/>
+			<mvc:exclude-mapping path="/login/tologin"/>
+			<mvc:exclude-mapping path="/login/logout"/>
+			<!-- 拦截类 cas单点登录验证
+			<mvc:exclude-mapping path="/login/casValidate"/>
+			--> 
+			<mvc:exclude-mapping path="/file/**"/>
+			<bean class="com.xincheng.web.interceptor.AccessInterceptor"/>
+			
+		</mvc:interceptor>
+		
+	</mvc:interceptors>
+	<!-- 拦截报错   -->  
+	<bean id="handlerExceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver" >  
+	    <property name="exceptionMappings">  
+	        <props>  
+	            <prop key="com.xincheng.web.interceptor.SessionTimeoutException">redirect:/login/tologin</prop>
+	        </props>  
+	    </property>  
+	</bean>
+</beans>

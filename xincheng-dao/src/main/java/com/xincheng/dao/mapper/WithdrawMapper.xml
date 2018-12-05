@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xincheng.dao.WithdrawDao">
+	<!-- 使用二级缓存 <cache/> -->
+	<sql id="table">
+		withdraw
+	</sql>
+	<!-- column列 -->
+	<sql id="column">
+		id,disid,oldmoney,money,newmoney,createdate
+	</sql>
+			<!-- 保存 -->
+	<insert id="save" parameterType="map" flushCache="true" timeout="20000">
+		insert into <include refid="table" />
+		(<include refid="column" />)values(#{id},#{disid},#{oldmoney},#{money},#{newmoney},#{createdata})
+	</insert>
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findcountmoney" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select disid,sum(money) as money from <include refid="table"/>
+		<where>
+			<if test="disid!=null and disid!=''">
+				disid=#{disid}
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		group by disid
+	</select>
+	
+			<!-- 根据条件查询 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findyjtxjlPageByParam" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select w.*,u.name as username from withdraw as w
+		left join sys_user as u on w.userid = u.id
+		<where>
+			<if test="name!=null and name!=''">
+				and u.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and w.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and w.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		order by w.createdate desc
+		limit #{start},#{pageSize}
+	</select>
+	<!-- 根据条件查询总数 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="getyjtxjlCountByParam" resultType="int" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select count(*) from (select w.*,u.name as username from withdraw as w
+		left join sys_user as u on w.userid = u.id
+		<where>
+			<if test="name!=null and name!=''">
+				and u.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and w.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and w.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>) as tab
+	</select>
+</mapper> 

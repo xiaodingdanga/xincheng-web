@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xincheng.dao.RechargeDao">
+	<!-- 使用二级缓存 <cache/> -->
+	<sql id="table">
+		recharge_log
+	</sql>
+	<!-- column列 -->
+	<sql id="column">
+		id,memberid,money,price,almoney,type,createdate
+	</sql>
+	<!-- 根据条件查询 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findPageByParam" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select * from member
+		<where>
+			state='0'
+			<if test="name!=null and name!=''">
+				and name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="tel!=null and tel!=''">
+				and tel like CONCAT('%',#{tel},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and serialnum=#{serialnum}
+			</if>
+		</where>
+		order by createdate desc
+		limit #{start},#{pageSize}
+	</select>
+	<!-- 根据条件查询总数 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="getCountByParam" resultType="int" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select count(*) from member
+		<where>
+			state='0'
+			<if test="name!=null and name!=''">
+				and name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="tel!=null and tel!=''">
+				and tel like CONCAT('%',#{tel},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and serialnum=#{serialnum}
+			</if>
+		</where>
+	</select>
+			<!-- 保存 -->
+	<insert id="save" parameterType="map" flushCache="true" timeout="20000">
+		insert into <include refid="table" />
+		(<include refid="column" />)values(#{id},#{memberid},#{money},#{price},#{almoney},#{type},#{createdate})
+	</insert>
+	
+	<!-- 根据条件查询 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findczmxPageByParam" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select r.*,m.name as username,m.serialnum as serialnum from recharge_log as r
+		left join member as m on r.memberid = m.id
+		<where>
+		r.type='0'
+			<if test="name!=null and name!=''">
+				and m.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and m.serialnum=#{serialnum}
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and r.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and r.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		order by r.createdate desc
+		limit #{start},#{pageSize}
+	</select>
+	<!-- 根据条件查询总数 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="getczmxCountByParam" resultType="int" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select count(*) from recharge_log as r
+		left join member as m on r.memberid = m.id
+		<where>
+		r.type='0'
+			<if test="name!=null and name!=''">
+				and m.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and m.serialnum=#{serialnum}
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and r.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and r.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+	</select>
+	
+	<!-- 根据条件查询 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findcztjPageByParam" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select m.name,m.serialnum,sum(price) as price from recharge_log as r
+		left join member as m on r.memberid = m.id
+		<where>
+			r.type='0'
+			<if test="name!=null and name!=''">
+				and m.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and m.serialnum=#{serialnum}
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and r.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and r.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		group by m.name,m.serialnum
+		order by r.createdate desc
+		limit #{start},#{pageSize}
+	</select>
+	<!-- 根据条件查询总数 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="getcztjCountByParam" resultType="int" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select count(*) from (select m.name,m.serialnum from recharge_log as r
+		left join member as m on r.memberid = m.id
+		<where>
+		r.type='0'
+			<if test="name!=null and name!=''">
+				and m.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and m.serialnum=#{serialnum}
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and r.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and r.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		group by m.name,m.serialnum) as tab
+	</select>
+	
+	
+	<!-- 根据条件查询 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findtkmxPageByParam" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select r.*,m.name,m.serialnum from recharge_log as r
+		left join member as m on r.memberid = m.id
+		<where>
+		r.type='1'
+			<if test="name!=null and name!=''">
+				and m.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and m.serialnum=#{serialnum}
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and r.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and r.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		order by r.createdate desc
+		limit #{start},#{pageSize}
+	</select>
+	<!-- 根据条件查询总数 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="gettkmxCountByParam" resultType="int" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select count(*) from recharge_log as r
+		left join member as m on r.memberid = m.id
+		<where>
+		r.type='1'
+			<if test="name!=null and name!=''">
+				and m.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and m.serialnum=#{serialnum}
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and r.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and r.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+	</select>
+	<!-- 根据条件查询 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findtktjPageByParam" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select m.name,m.serialnum,sum(price) as price from recharge_log as r
+		left join member as m on r.memberid = m.id
+		<where>
+			r.type='1'
+			<if test="name!=null and name!=''">
+				and m.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and m.serialnum=#{serialnum}
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and r.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and r.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		group by m.name,m.serialnum
+		order by r.createdate desc
+		limit #{start},#{pageSize}
+	</select>
+	<!-- 根据条件查询总数 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="gettktjCountByParam" resultType="int" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select count(*) from (select m.name,m.serialnum from recharge_log as r
+		left join member as m on r.memberid = m.id
+		<where>
+		r.type='1'
+			<if test="name!=null and name!=''">
+				and m.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and m.serialnum=#{serialnum}
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and r.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and r.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		group by m.name,m.serialnum) as tab
+	</select>
+</mapper> 

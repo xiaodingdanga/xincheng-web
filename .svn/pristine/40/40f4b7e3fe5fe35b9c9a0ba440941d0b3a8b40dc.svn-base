@@ -1,0 +1,20 @@
+package com.xincheng.service.system;
+
+import java.util.List;
+import java.util.Map;
+
+public interface ProportionService {
+	/**
+	 * 保存
+	 * @param paramap
+	 */
+	public void save(Map<String,Object> paramap);
+	/**
+	 * 修改
+	 */
+	public void update(Map<String,Object> paramap);
+	/**
+	 * 根据条件查询所有
+	 */
+	public List<Map<String,Object>> findAllByParam(Map<String,Object> paramap);
+}

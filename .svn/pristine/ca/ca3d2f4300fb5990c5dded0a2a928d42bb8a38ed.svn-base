@@ -1,0 +1,169 @@
+package com.xincheng.service.system.impl;
+
+import java.util.List;
+import java.util.Map;
+import java.io.File;
+import java.util.Date;
+import java.util.HashMap;
+
+import javax.annotation.Resource;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.xincheng.common.util;
+import com.xincheng.dao.MemberDao;
+import com.xincheng.dao.UserDao;
+import com.xincheng.service.system.MemberService;
+
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class MemberServiceImpl implements MemberService {
+
+	Logger log = LogManager.getLogger(MemberServiceImpl.class.getName());
+
+	@Resource
+	private MemberDao memberDao;
+	@Resource
+	private UserDao userDao;
+
+	public String findPageByParam(Map<String, Object> paramap) {
+		// 当前每页行数
+		int pageSize = Integer.parseInt(paramap.get("rows").toString());
+		paramap.put("pageSize", pageSize);
+		// 当前页数
+		int page = Integer.parseInt(paramap.get("page").toString());
+		// 总记录数
+		int totalRecord = memberDao.getCountByParam(paramap);
+		// 总页数
+		int totalPage = 0;
+		// 总数%每页数=余数：等于0----否则----总数%每页数=余数：不等于0
+		if (totalRecord % pageSize == 0) {
+			// 总数/每页数=总页数
+			totalPage = totalRecord / pageSize;
+		} else {
+			// 总数/每页数+1=总页数
+			totalPage = totalRecord / pageSize + 1;
+		}
+		// 开始记录数
+		int index = (page - 1) * pageSize;
+		paramap.put("start", index);
+		JSONObject pagejson = new JSONObject();
+		// 根据条件查询
+		List<Map<String, Object>> list = memberDao.findPageByParam(paramap);
+		pagejson.put("total", totalPage);// 总页数
+		pagejson.put("page", page);// 当前页数
+		pagejson.put("records", totalRecord);// 总记录数
+		JSONArray listjson = new JSONArray();
+		for (Map<String, Object> membermap : list) {
+			JSONObject obj = new JSONObject();
+			obj.put("id", null == membermap.get("id") ? "" : membermap.get("id").toString());
+			obj.put("serialnum", null == membermap.get("serialnum") ? "" : membermap.get("serialnum").toString());
+			obj.put("chipnum", null == membermap.get("chipnum") ? "" : membermap.get("chipnum").toString());
+			obj.put("state", null == membermap.get("state") ? "" : membermap.get("state").toString());
+			obj.put("name", null == membermap.get("name") ? "" : membermap.get("name").toString());
+			obj.put("tel", null == membermap.get("tel") ? "" : membermap.get("tel").toString());
+			obj.put("cardtype", null == membermap.get("cardtype") ? "" : membermap.get("cardtype").toString());
+			obj.put("money", null == membermap.get("money") ? "" : membermap.get("money").toString());
+			obj.put("isuse", null == membermap.get("isuse") ? "" : membermap.get("isuse").toString());
+			obj.put("disname", null == membermap.get("disname") ? "" : membermap.get("disname").toString());
+			obj.put("createdate", null == membermap.get("createdate") ? "" : membermap.get("createdate").toString());
+			listjson.add(obj);
+		}
+		pagejson.put("rows", listjson);// 记录列表
+		return pagejson.toJSONString();
+	}
+	
+	
+	/**
+	 * 根据ID查询实例
+	 * @param paramap
+	 * @return
+	 */
+	public Map<String, Object> findById(String id) {
+		return memberDao.findById(id);
+	}
+	/**
+	 * 验证会员卡号是否重复
+	 * @param paramap
+	 * @return
+	 */
+	public boolean checkserialnum(Map<String, Object> paramap) {
+		return memberDao.checkserialnum(paramap);
+	}
+
+	/**
+	 * 查找最后一次保存的会员卡号
+	 */	
+	public Map<String, Object> findLastSerialnum() {
+		return memberDao.findLastSerialnum();
+	}
+	/**
+	 * 保存
+	 * @param paramap
+	 */
+	public void save(Map<String, Object> paramap) {
+		String id = util.getUuid();
+		String name =paramap.get("name").toString();
+		String tel =paramap.get("tel").toString();
+		String state="1";
+		if(!name.equals("")&&!tel.equals("")){
+			state="0";
+		}
+		paramap.put("id", id);
+		paramap.put("state", state);
+		paramap.put("isuse", "0");
+		paramap.put("money", 0);
+		paramap.put("createdate", util.datetostring(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		memberDao.save(paramap);
+	}
+	/**
+	 * 更新
+	 * @param paramap
+	 */
+	public void update(Map<String, Object> paramap) {
+		String id = paramap.get("id").toString();
+		Map<String,Object> membermap = memberDao.findById(id);
+		String name =paramap.get("name").toString();
+		String tel =paramap.get("tel").toString();
+		String cardtype =paramap.get("cardtype").toString();
+		String serialnum =paramap.get("serialnum").toString();
+		String chipnum =paramap.get("chipnum").toString();
+		String isuse =paramap.get("isuse")==null?"":paramap.get("isuse").toString();
+		String disid =paramap.get("disid")==null?"":paramap.get("disid").toString();
+		if(!name.equals("")&&!tel.equals("")){
+			membermap.put("state", "0");
+		}else{
+			membermap.put("state", "1");
+		}
+		membermap.put("serialnum",serialnum);
+		membermap.put("chipnum",chipnum);
+		membermap.put("name",name);
+		membermap.put("tel",tel);
+		membermap.put("cardtype",cardtype);
+		membermap.put("disid",disid);
+		membermap.put("isuse",isuse);
+		membermap.put("createdate", util.datetostring(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		memberDao.update(membermap);
+	}
+	/**
+	 * 加载分销商
+	 */
+	public String loaddis() {
+		Map<String,Object> paramap= new HashMap<String,Object>();
+		paramap.put("type", "1");
+		List<Map<String, Object>> list = userDao.findAllByParam(paramap);
+		JSONArray jsonArray = new JSONArray();
+		for (Map<String, Object> maplist : list) {
+			JSONObject obj = new JSONObject();
+			obj.put("id", maplist.get("id").toString());
+			obj.put("name", maplist.get("name").toString());
+			jsonArray.add(obj);
+		}
+		return jsonArray.toString();
+	}
+}

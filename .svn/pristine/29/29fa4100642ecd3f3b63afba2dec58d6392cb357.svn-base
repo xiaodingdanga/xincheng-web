@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xincheng.dao.BackcardDao">
+	<!-- 使用二级缓存 <cache/> -->
+	<sql id="table">
+		recharge_log
+	</sql>
+	<!-- column列 -->
+	<sql id="column">
+		id,memberid,money,price,almoney,type,createdate
+	</sql>
+	<!-- 根据条件查询 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findPageByParam" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select * from member
+		<where>
+			state='0'
+			<if test="name!=null and name!=''">
+				and name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="tel!=null and tel!=''">
+				and tel like CONCAT('%',#{tel},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and serialnum=#{serialnum}
+			</if>
+		</where>
+		order by createdate desc
+		limit #{start},#{pageSize}
+	</select>
+	<!-- 根据条件查询总数 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="getCountByParam" resultType="int" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select count(*) from member
+		<where>
+			state='0'
+			<if test="name!=null and name!=''">
+				and name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="tel!=null and tel!=''">
+				and tel like CONCAT('%',#{tel},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and serialnum=#{serialnum}
+			</if>
+		</where>
+	</select>
+			<!-- 保存 -->
+	<insert id="save" parameterType="map" flushCache="true" timeout="20000">
+		insert into <include refid="table" />
+		(<include refid="column" />)values(#{id},#{memberid},#{money},#{price},#{almoney},#{type},#{createdate})
+	</insert>
+	<!-- 根据ID查询实例 -->
+	<select id="findLastMap" resultType="map" parameterType="String"  useCache="true" flushCache="false" timeout="10000">
+		select <include refid="column" /> from <include refid="table" /> 
+		where memberid=#{memberid}
+		order by createdate desc
+		limit 0,1
+	</select>
+</mapper> 

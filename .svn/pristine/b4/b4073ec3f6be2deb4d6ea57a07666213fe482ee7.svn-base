@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xincheng.dao.ConsumptionDao">
+	<!-- 使用二级缓存 <cache/> -->
+	<sql id="table">
+		consumption_log
+	</sql>
+	<!-- column列 -->
+	<sql id="column">
+		id,memberid,price,realprice,oldmoney,newmoney,inprice,outprice,createdate,userid,customerid,oilid
+	</sql>
+	<!-- 保存 -->
+	<insert id="save" parameterType="map" flushCache="true" timeout="20000">
+		insert into <include refid="table" /> (<include refid="column" />)values(#{id},#{memberid},#{price},#{realprice},#{oldmoney},#{newmoney},#{inprice},#{outprice},#{createdate},#{userid},#{customerid},#{oilid})
+	</insert>
+		<!-- 保存分销记录 -->
+	<insert id="savedis" parameterType="map" flushCache="true" timeout="20000">
+		insert into distribution_log (id,disid,consumption,volume,money,commission,createdate)values(#{id},#{disid},#{consumption},#{volume},#{money},#{commission},#{createdate})
+	</insert>
+	
+	<!-- 根据条件查询 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findxfmxPageByParam" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select c.*,m.name,m.serialnum from consumption_log as c
+		left join member as m on c.memberid = m.id
+		<where>
+			<if test="name!=null and name!=''">
+				and m.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and m.serialnum=#{serialnum}
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and c.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and c.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		order by c.createdate desc
+		limit #{start},#{pageSize}
+	</select>
+	<!-- 根据条件查询总数 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="getxfmxCountByParam" resultType="int" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select count(*) from consumption_log as c
+		left join member as m on c.memberid = m.id
+		<where>
+			<if test="name!=null and name!=''">
+				and m.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="serialnum!=null and serialnum!=''">
+				and m.serialnum=#{serialnum}
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and c.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and c.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+	</select>
+	
+	<!-- 根据条件查询 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findxftjPageByParam" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select sum(price) as price,sum(realprice) as realprice,inprice,outprice from consumption_log 
+		<where>
+			<if test="startdate!=null and startdate!=''">
+				and c.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and c.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		group by inprice,outprice
+		order by createdate desc
+		limit #{start},#{pageSize}
+	</select>
+	<!-- 根据条件查询总数 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="getxftjCountByParam" resultType="int" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select count(*) from (select sum(price) as price,sum(realprice) as realprice,inprice,outprice from consumption_log 
+		<where>
+			<if test="startdate!=null and startdate!=''">
+				and c.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and c.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		group by inprice,outprice) as tab
+	</select>
+	
+	<!-- 根据customerid查询商户拥有油的种类-->
+	<select id="findoilbyparamap" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select  cor.oilid,c.name as customername,o.name as oilname,cor.outprice,cor.inprice,o.disprice from  customer_oil_relation as cor
+		left join oil as o on o.id = cor.oilid
+		left join customer as c on c.id = cor.customerid
+		<where>
+			cor.state='0'
+			<if test="customerid!=null and customerid!=''">
+				and cor.customerid=#{customerid}
+			</if>
+			<if test="oilid!=null and oilid!=''">
+				and cor.oilid=#{oilid}
+			</if>
+		</where>
+	</select>
+</mapper> 

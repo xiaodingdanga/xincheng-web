@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="com.xincheng.dao.SysUserFaceDao">
+	<!-- 使用二级缓存
+	<cache/> -->
+	<!-- table表-->
+	<sql id="table">
+		sys_user_face
+	</sql>
+	<!-- column列 -->
+	<sql id="column">
+		id,userid,facedate,groupid,createtime,updatetime,facetoken
+	</sql>
+	<insert id="save" parameterType="map" >
+	   insert into <include refid="table" /> (<include refid="column" />)
+	   values(#{id},#{userid},#{facedate},#{groupid},now(),now(),#{facetoken})
+	</insert>
+	
+	<update id="updateByUserId" parameterType="map" >
+	   update <include refid="table"/>
+    	<set>
+			facedate=#{facedate},
+			facetoken=#{facetoken},
+			updatetime=now()
+		</set>
+    	where userid=#{userid}
+	</update>
+	
+	<select id="findByUserId" parameterType="string" resultType="map">
+	  select <include refid="column" /> from <include refid="table"/>
+	  where userid=#{userid}
+	</select>
+	
+	<delete id="deleteByUserId" parameterType="string" >
+	  delete from <include refid="table"/> where userid=#{userid}
+	</delete>
+</mapper>  

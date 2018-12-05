@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xincheng.dao.DistributionDao">
+	<!-- 使用二级缓存 <cache/> -->
+	<sql id="table">
+		distribution_log
+	</sql>
+	<!-- column列 -->
+	<sql id="column">
+		id,disid,consumption,volume,commission,money,createdate
+	</sql>
+	<!-- 根据条件查询 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findcountmoney" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select disid,sum(volume) as volume,sum(money) as money from <include refid="table"/>  
+		<where>
+			<if test="disid!=null and disid!=''">
+				disid=#{disid}
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		group by disid
+	</select>
+	
+		<!-- 根据条件查询 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findyjmxPageByParam" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select d.*,u.name as username from distribution_log as d
+		left join sys_user as u on d.userid = u.id
+		<where>
+			<if test="name!=null and name!=''">
+				and u.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and d.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and d.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		order by d	.createdate desc
+		limit #{start},#{pageSize}
+	</select>
+	<!-- 根据条件查询总数 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="getyjmxCountByParam" resultType="int" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select count(*) from distribution_log as d
+		left join sys_user as u on d.userid = u.id
+		<where>
+			<if test="name!=null and name!=''">
+				and u.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and d.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and d.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+	</select>
+	
+		<!-- 根据条件查询 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findyjtjPageByParam" resultType="map" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select u.name as username,sum(d.money) as money from distribution_log as d
+		left join sys_user as u on d.userid = u.id
+		<where>
+			<if test="name!=null and name!=''">
+				and u.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and d.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and d.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		group by u.name
+		order by d.createdate desc
+		limit #{start},#{pageSize}
+	</select>
+	<!-- 根据条件查询总数 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="getyjtjCountByParam" resultType="int" parameterType="map" useCache="true" flushCache="false" timeout="10000">
+		select count(*) from (select u.name as username,sum(d.money) as money from distribution_log as d
+		left join sys_user as u on d.userid = u.id
+		<where>
+			<if test="name!=null and name!=''">
+				and u.name like CONCAT('%',#{name},'%')
+			</if>
+			<if test="startdate!=null and startdate!=''">
+				and d.createdate>=CONCAT(#{startdate},' 00:00:00')
+			</if>
+			<if test="enddate!=null and enddate!=''">
+				and d.createdate<![CDATA[<=]]>CONCAT(#{enddate},'23:59:59')
+			</if>
+		</where>
+		group by u.name) as tab
+	</select>
+	<!-- 根据条件查询 -->
+	<!-- resultType 数据中元素类型如返回list,内容为map -->
+	<select id="findcountmoneybydisid" resultType="map" parameterType="String" useCache="true" flushCache="false" timeout="10000">
+		select sum(money) as money from <include refid="table"/>  
+		<where>
+			<if test="_parameter!=null and _parameter!=''">
+				disid=#{disid}
+			</if>
+		</where>
+	</select>
+</mapper> 

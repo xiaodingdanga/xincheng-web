@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xincheng.dao.ProportionDao">
+	<!-- 使用二级缓存 <cache/> -->
+	<sql id="table">
+		proportion
+	</sql>
+	<!-- column列 -->
+	<sql id="column">
+		id,inprice,outprice
+	</sql>
+	<!-- 根据条件查询所有 -->
+	<select id="findAllByParam" resultType="map" parameterType="map"  useCache="true" flushCache="false" timeout="10000">
+		select <include refid="column" /> from <include refid="table" /> 
+		<where>
+			<if test="id!=null and id!=''">
+				 id=#{id}
+			</if>
+		</where>
+	</select>
+	<!-- 保存 -->
+	<insert id="save" parameterType="map" flushCache="true" timeout="20000">
+		insert into <include refid="table" /> (<include refid="column" />)values(#{id},#{inprice},#{outprice})
+	</insert>
+	<!-- 修改 -->
+	<update id="update" parameterType="map" flushCache="true" timeout="20000">
+		update <include refid="table" />
+		<set>
+			inprice=#{inprice},
+			outprice=#{outprice}
+		</set>
+		<where> 
+			<if test="id!=null and id!=''">
+				id=#{id}
+			</if>
+		</where>
+	</update>
+</mapper> 
